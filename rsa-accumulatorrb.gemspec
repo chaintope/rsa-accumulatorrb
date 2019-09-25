@@ -1,16 +1,16 @@
 
 lib = File.expand_path("../lib", __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require "rsa/accumulator/version"
+require "rsa/acc/version"
 
 Gem::Specification.new do |spec|
-  spec.name          = "rsa-accumulator"
-  spec.version       = RSA::Accumulator::VERSION
+  spec.name          = "rsa-acc"
+  spec.version       = RSA::ACC::VERSION
   spec.authors       = ["azuchi"]
   spec.email         = ["azuchi@chaintope.com"]
 
-  spec.summary       = %q{RSA accumulator implementation for Ruby.}
-  spec.description   = %q{RSA accumulator implementation for Ruby.}
+  spec.summary       = %q{RSA acc implementation for Ruby.}
+  spec.description   = %q{RSA acc implementation for Ruby.}
   spec.homepage      = "https://github.com/chaintope/rsa-accumulatorrb"
   spec.license       = "MIT"
 

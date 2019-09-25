@@ -1,8 +1,13 @@
-require "rsa/accumulator/version"
+require "rsa/acc/version"
 
 module RSA
-  module Accumulator
-    class Error < StandardError; end
-    # Your code goes here...
+  class Accumulator
+
+    attr_reader :n
+
+    def initialize
+
+    end
+
   end
 end
