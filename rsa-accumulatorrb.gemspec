@@ -9,9 +9,9 @@ Gem::Specification.new do |spec|
   spec.authors       = ["azuchi"]
   spec.email         = ["azuchi@chaintope.com"]
 
-  spec.summary       = %q{RSA acc implementation for Ruby.}
-  spec.description   = %q{RSA acc implementation for Ruby.}
-  spec.homepage      = "https://github.com/chaintope/rsa-accumulator"
+  spec.summary       = %q{RSA accumulator implementation for Ruby.}
+  spec.description   = %q{RSA accumulator implementation for Ruby.}
+  spec.homepage      = "https://github.com/chaintope/rsa-accumulatorrb"
   spec.license       = "MIT"
 
   # Specify which files should be added to the gem when it is released.
