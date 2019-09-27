@@ -1,4 +1,3 @@
-require 'prime'
 require 'blake2b'
 
 module RSA
