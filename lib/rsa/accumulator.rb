@@ -21,14 +21,9 @@ module RSA
 
     # Add element to accumulator
     # @param [String] element an element to be added.
-    # @return [RSA::Accumulator] an updated accumulator.
     def add(element)
       p = hash_to_prime(element)
       @value = value.pow(p, n)
-    end
-
-    def member?(element)
-
     end
 
   end
