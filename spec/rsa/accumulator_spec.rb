@@ -10,7 +10,7 @@ RSpec.describe RSA::Accumulator do
 
   describe '#initialize' do
     it 'should generate n and acc' do
-      acc = RSA::Accumulator.new
+      acc = RSA::Accumulator.generate_random
       expect(acc.n).is_a?(Integer)
       expect(acc.value).is_a?(Integer)
       expect(acc.value < acc.n).to be true
@@ -20,7 +20,7 @@ RSpec.describe RSA::Accumulator do
 
   describe '#add' do
     it 'should generate updated acc' do
-      acc = RSA::Accumulator.new
+      acc = RSA::Accumulator.generate_random
       initial = acc.value
       acc.add('a')
       acc.add('b')
