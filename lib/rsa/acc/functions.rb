@@ -1,4 +1,4 @@
-require 'blake2b'
+require 'rbnacl'
 
 module RSA
   module ACC
@@ -10,12 +10,21 @@ module RSA
       def hash_to_prime(element)
         nonce = 0
         loop do
-          candidate = Blake2b.bytes(element + nonce.to_s)
+          candidate = RbNaCl::Hash.blake2b(element + nonce.to_s).unpack("C*")
           candidate[-1] |= 1
           candidate = candidate.pack('c*').unpack("H*").first.to_i(16)
-          return candidate if candidate.to_bn.prime?
+          if candidate.to_bn.prime?
+            return candidate
+          end
           nonce += 1
         end
+      end
+
+      private
+
+      def even_hex(num)
+        hex = num.to_s(16)
+        hex.rjust(8, '0')
       end
 
     end

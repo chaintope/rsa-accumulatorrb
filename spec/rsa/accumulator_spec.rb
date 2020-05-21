@@ -20,7 +20,7 @@ RSpec.describe RSA::Accumulator do
 
   describe '#add' do
     it 'should generate updated acc' do
-      acc = RSA::Accumulator.generate_random
+      acc = RSA::Accumulator.generate_rsa2048
       initial = acc.value
       acc.add('a')
       acc.add('b')

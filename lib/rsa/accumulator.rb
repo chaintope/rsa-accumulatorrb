@@ -19,22 +19,24 @@ module RSA
     # Generate accumulator using RSA2048 modulus.
     # @return [RSA::Accumulator]
     def self.generate_rsa2048
-      new(RSA2048_MODULUS)
+      new(RSA2048_MODULUS, 2)
     end
 
     # Generate accumulator with random modulus.
     # @param [Integer] bit_length bit length of accumulator. Default: 3072 bits.
     # @return [RSA::Accumulator]
     def self.generate_random(bit_length = 3072)
-      new(OpenSSL::PKey::RSA.generate(bit_length).n.to_i)
+      n = OpenSSL::PKey::RSA.generate(bit_length).n.to_i
+      new(n, SecureRandom.random_number(n))
     end
 
     # Initialize accumulator
     # @param [Integer] n modulus
+    # @param [Integer] value initial value
     # @return [RSA::Accumulator]
-    def initialize(n)
+    def initialize(n, value)
       @n = n
-      @value = SecureRandom.random_number(@n)
+      @value = value
     end
 
     # Add element to accumulator
@@ -46,6 +48,15 @@ module RSA
 
     def ==(other)
       self.n == other.n && self.value == other.value
+    end
+
+    # Check whether +element+ include in accumulator.
+    # @param [String] element
+    # @param [String] proof
+    # @return [Boolean] If element exist in acc return true, otherwise false.
+    def include?(element, proof)
+      p = hash_to_prime(element)
+
     end
 
   end
