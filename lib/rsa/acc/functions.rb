@@ -20,6 +20,14 @@ module RSA
         end
       end
 
+      # Convert +num+ to even hex string.
+      # @param [Integer] num
+      # @return [String] hex string.
+      def even_hex(num)
+        hex = num.to_s(16)
+        hex.rjust(8, '0')
+      end
+
     end
   end
 end
