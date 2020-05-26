@@ -1,5 +1,6 @@
 require "rsa/acc/version"
 require 'rsa/acc/functions'
+require 'rsa/acc/proof'
 require 'openssl'
 require 'securerandom'
 
@@ -46,18 +47,26 @@ module RSA
       @value = value.pow(p, n)
     end
 
+    # Add element to accumulator and get inclusion proof.
+    # @param [String] element an element to be added.
+    # @return [RSA::ACC::Proof] inclusion proof.
+    def add_with_proof(element)
+      current_acc = value
+      add(element)
+      RSA::ACC::Proof.new(element, current_acc)
+    end
+
     def ==(other)
       self.n == other.n && self.value == other.value
     end
 
     # Check whether +element+ include in accumulator.
     # @param [String] element
-    # @param [String] proof
+    # @param [RSA::ACC::Proof] proof inclusion proof.
     # @return [Boolean] If element exist in acc return true, otherwise false.
     def include?(element, proof)
       p = hash_to_prime(element)
-
+      proof.witness.pow(p, n) == value
     end
-
   end
 end

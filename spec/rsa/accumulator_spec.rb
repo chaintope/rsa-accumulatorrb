@@ -31,4 +31,15 @@ RSpec.describe RSA::Accumulator do
     end
   end
 
+  describe '#include' do
+    it 'checks whether element exist in the accumulator' do
+      acc = RSA::Accumulator.generate_random
+      acc.add('a')
+      acc.add('b')
+      proof = acc.add_with_proof('c')
+      expect(acc.include?('c', proof)).to be true
+      expect(acc.include?('d', proof)).to be false
+    end
+  end
+
 end
