@@ -19,15 +19,29 @@ RSpec.describe RSA::Accumulator do
   end
 
   describe '#add' do
-    it 'should generate updated acc' do
-      acc = RSA::Accumulator.generate_rsa2048
-      initial = acc.value
-      acc.add('a')
-      acc.add('b')
-      acc.add('c')
-      acc.add('d')
-      p = hash_to_prime('a') * hash_to_prime('b') * hash_to_prime('c') * hash_to_prime('d')
-      expect(acc.value).to eq(initial.pow(p, acc.n))
+    context 'with a single element' do
+      it 'should generate updated acc' do
+        acc = RSA::Accumulator.generate_rsa2048
+        initial = acc.value
+        acc.add('a')
+        acc.add('b')
+        acc.add('c')
+        acc.add('d')
+        p = hash_to_prime('a') * hash_to_prime('b') * hash_to_prime('c') * hash_to_prime('d')
+        expect(acc.value).to eq(initial.pow(p, acc.n))
+      end
+    end
+
+    context 'with multiple elements' do
+      it 'should generate product of all elements.' do
+        acc = RSA::Accumulator.generate_rsa2048
+        acc.add('a')
+        acc.add('b')
+        acc.add('c')
+        acc2 = RSA::Accumulator.generate_rsa2048
+        acc2.add('a', 'b', 'c')
+        expect(acc).to eq(acc2)
+      end
     end
   end
 
@@ -41,5 +55,6 @@ RSpec.describe RSA::Accumulator do
       expect(acc.include?('d', proof)).to be false
     end
   end
+
 
 end

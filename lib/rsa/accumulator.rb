@@ -43,9 +43,9 @@ module RSA
     end
 
     # Add element to accumulator
-    # @param [String] element an element to be added.
-    def add(element)
-      p = hash_to_prime(element)
+    # @param [Array[String]] elements the elements to be added.
+    def add(*elements)
+      p = elements.map{|e|hash_to_prime(e)}.inject(:*)
       @value = value.pow(p, n)
       [@value, p]
     end
