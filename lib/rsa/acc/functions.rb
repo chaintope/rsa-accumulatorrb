@@ -20,13 +20,6 @@ module RSA
         end
       end
 
-      private
-
-      def even_hex(num)
-        hex = num.to_s(16)
-        hex.rjust(8, '0')
-      end
-
     end
   end
 end
