@@ -26,7 +26,7 @@ module RSA
       def valid?(base, exp, result, proof, modulus)
         l = compute_challenge(base, exp, result)
         r = exp % l
-        w = (proof.pow(l, modulus) * base.pow(r, modulus)) % n
+        w = (proof.pow(l, modulus) * base.pow(r, modulus)) % modulus
         w == result
       end
 
