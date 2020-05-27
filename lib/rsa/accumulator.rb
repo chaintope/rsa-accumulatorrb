@@ -1,7 +1,4 @@
-require "rsa/acc/version"
-require 'rsa/acc/functions'
-require 'rsa/acc/proof'
-require 'rsa/acc/poe'
+require 'rsa/acc'
 require 'openssl'
 require 'securerandom'
 
