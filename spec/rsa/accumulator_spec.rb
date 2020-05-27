@@ -50,11 +50,10 @@ RSpec.describe RSA::Accumulator do
       acc = RSA::Accumulator.generate_random
       acc.add('a')
       acc.add('b')
-      proof = acc.add_with_proof('c')
+      proof = acc.add('c')
       expect(acc.include?('c', proof)).to be true
       expect(acc.include?('d', proof)).to be false
     end
   end
-
 
 end

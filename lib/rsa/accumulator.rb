@@ -39,21 +39,14 @@ module RSA
       @value = value
     end
 
-    # Add element to accumulator
-    # @param [Array[String]] elements the elements to be added.
+    # Add element to accumulator and get inclusion proof.
+    # @param [String] elements an element to be added.
+    # @return [RSA::ACC::Proof] inclusion proof.
     def add(*elements)
+      current_acc = value
       p = elements.map{|e|hash_to_prime(e)}.inject(:*)
       @value = value.pow(p, n)
-      [@value, p]
-    end
-
-    # Add element to accumulator and get inclusion proof.
-    # @param [String] element an element to be added.
-    # @return [RSA::ACC::Proof] inclusion proof.
-    def add_with_proof(element)
-      current_acc = value
-      new_acc, prime = add(element)
-      RSA::ACC::Proof.new(element, current_acc, prove(current_acc, prime, new_acc, n))
+      RSA::ACC::Proof.new(elements, current_acc, prove(current_acc, p, value, n))
     end
 
     # Check whether +other+ is same accumulator.
