@@ -20,6 +20,42 @@ module RSA
         end
       end
 
+      # Computes (xy) th root of g given xth and yth roots of g. x and y is co-prime.
+      # (a, b) ← Bezout(x, y)
+      #
+      # @param [Integer] w1 first witness.
+      # @param [Integer] w2 second witness.
+      # @param [Integer] x
+      # @param [Integer] y
+      # @return [Integer] w1^b * w2^a
+      def shamir_trick(w1, w2, x, y, modulus)
+        raise ArgumentError, 'w1^x != w2^y' unless w1.pow(x, modulus) == w2.pow(y, modulus)
+        a, b = egcd(x, y)
+        raise ArgumentError, 'Inputs does not co-prime.' unless a * x + b * y == 1
+        if a.negative?
+          a = -a
+          w2 = w2.to_bn.mod_inverse(modulus).to_i
+        end
+        if b.negative?
+          b = -b
+          w1 = w1.to_bn.mod_inverse(modulus).to_i
+        end
+        (w1.pow(b, modulus) * w2.pow(a, modulus)) % modulus
+      end
+
+      # Computes Bezout coefficients.
+      # see: https://github.com/dryruby/rsa.rb/blob/b1366970d31dba0078fd06d9f5d3ddd4952fb087/lib/rsa/math.rb#L143
+      # @param [Integer] x
+      # @param [Integer] y
+      # @return [Array[Integer, Integer]] Bezout coefficients
+      def egcd(x, y)
+        return [0, 1] if x.modulo(y).zero?
+        a, b = egcd(y, x.modulo(y))
+        [b, a - b * x.div(y)]
+      end
+
+      private
+
       # Convert +num+ to even hex string.
       # @param [Integer] num
       # @return [String] hex string.
