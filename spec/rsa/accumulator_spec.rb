@@ -41,6 +41,7 @@ RSpec.describe RSA::Accumulator do
         acc2 = RSA::Accumulator.generate_rsa2048
         acc2.add('a', 'b', 'c')
         expect(acc).to eq(acc2)
+        # TODO include? supports multiple elements
       end
     end
   end
@@ -53,6 +54,38 @@ RSpec.describe RSA::Accumulator do
       proof = acc.add('c')
       expect(acc.include?('c', proof)).to be true
       expect(acc.include?('d', proof)).to be false
+    end
+  end
+
+  describe '#delete' do
+    context 'with correct witness' do
+      it 'should delete correctly.' do
+        acc = RSA::Accumulator.generate_random
+        acc.add('a', 'b')
+        acc0 = acc.value
+        proof = acc.add('c')
+        expect(acc.include?('c', proof)).to be true
+        deleted_proof = acc.delete(proof)
+        expect(acc.value).to eq(acc0)
+        expect(acc.include?('c', proof)).to be false
+        deleted_prime = deleted_proof.element_prime
+        expect(acc.valid?(deleted_proof.witness, deleted_prime, proof.acc_value, deleted_proof.proof, acc.n)).to be true
+
+        # empty delete
+        acc1 = acc.value
+        expect(acc.delete)
+        expect(acc.value).to eq(acc1)
+      end
+    end
+
+    context 'with bad witness' do
+      it 'should raise error.' do
+        acc = RSA::Accumulator.generate_random
+        acc.add('a', 'b')
+        proof = acc.add('c')
+        dummy = RSA::ACC::Proof.new('b', proof.witness, proof.acc_value, proof.proof)
+        expect{acc.delete(dummy)}.to raise_error(RSA::ACC::Error, 'Bad witness.')
+      end
     end
   end
 

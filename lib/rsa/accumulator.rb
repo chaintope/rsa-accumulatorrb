@@ -46,7 +46,7 @@ module RSA
       current_acc = value
       p = elements.map{|e|hash_to_prime(e)}.inject(:*)
       @value = value.pow(p, n)
-      RSA::ACC::Proof.new(elements, current_acc, prove(current_acc, p, value, n))
+      RSA::ACC::Proof.new(elements, current_acc, value, prove(current_acc, p, value, n))
     end
 
     # Check whether +other+ is same accumulator.
@@ -64,6 +64,32 @@ module RSA
     def include?(element, proof)
       p = hash_to_prime(element)
       valid?(proof.witness, p, value, proof.proof, n)
+    end
+
+    # Remove the elements in +proofs+ from the accumulator.
+    # @param [RSA::ACC::Proof] proofs proofs including the elements to be removed and the witnesses.
+    # @return [RSA::ACC::Proof] Proof that the accumulator before the remove contained the deleted elements.
+    def delete(*proofs)
+      return RSA::ACC::Proof.new(proofs.map(&:element).flatten, value, value, prove(value, 1, value, n)) if proofs.empty?
+
+      witnesses = proofs.map do |proof|
+        p = proof.element_prime
+        raise RSA::ACC::Error, 'Bad witness.' unless proof.witness.pow(p, n) == value
+        [p, proof.witness]
+      end
+
+      current_value = value
+      proof_product = witnesses.first[0]
+      new_value = witnesses.first[1]
+      if witnesses.size > 1
+        witnesses[1..-1].each do |w|
+          new_value = shamir_trick(new_value, w[1], proof_product, w[0], n)
+          proof_product *= w[0]
+        end
+      end
+
+      @value = new_value
+      RSA::ACC::Proof.new(proofs.map{|p|p.element}.flatten, value, current_value, prove(value, proof_product, current_value, n))
     end
 
   end
