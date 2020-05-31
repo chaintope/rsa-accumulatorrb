@@ -57,13 +57,11 @@ module RSA
       self.n == other.n && self.value == other.value
     end
 
-    # Check whether +element+ include in accumulator.
-    # @param [String] element
+    # Check whether +proof+#element include in accumulator.
     # @param [RSA::ACC::Proof] proof inclusion proof.
     # @return [Boolean] If element exist in acc return true, otherwise false.
-    def include?(element, proof)
-      p = hash_to_prime(element)
-      valid?(proof.witness, p, value, proof.proof, n)
+    def include?(proof)
+      valid?(proof.witness, proof.element_prime, value, proof.proof, n)
     end
 
     # Remove the elements in +proofs+ from the accumulator.
