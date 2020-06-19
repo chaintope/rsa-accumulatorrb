@@ -14,8 +14,6 @@ module RSA
     attr_reader :n
     attr_accessor :value
 
-    private_class_method :new
-
     # Generate accumulator using RSA2048 modulus.
     # @return [RSA::Accumulator]
     def self.generate_rsa2048
@@ -88,6 +86,19 @@ module RSA
 
       @value = new_value
       RSA::ACC::Proof.new(proofs.map{|p|p.element}.flatten, value, current_value, prove(value, proof_product, current_value, n))
+    end
+
+    # Computes an xi-th root of +y+ for all i = 1, ..., n in total time O(n log(n)).
+    # @param [Array[Integer]] f factorizations of the exponent x = x1, ..., xn.
+    # @return [Array{Integer}] array of xi-th root
+    def root_factor(*f)
+      return [value] if f.size == 1
+      half_n = f.size / 2
+      g_l = RSA::Accumulator.new(n, value.pow(f[0...half_n].map.inject(:*), n))
+      g_r = RSA::Accumulator.new(n, value.pow(f[half_n..-1].map.inject(:*), n))
+      l = g_r.root_factor(*f[0...half_n])
+      r = g_l.root_factor(*f[half_n..-1])
+      [l, r].flatten
     end
 
   end
