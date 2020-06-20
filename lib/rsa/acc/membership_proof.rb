@@ -1,6 +1,6 @@
 module RSA
   module ACC
-    class Proof
+    class MembershipProof
 
       include Functions
 

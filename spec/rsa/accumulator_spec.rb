@@ -46,13 +46,13 @@ RSpec.describe RSA::Accumulator do
     end
   end
 
-  describe '#include' do
+  describe '#member' do
     it 'checks whether element exist in the accumulator' do
       acc = RSA::Accumulator.generate_random
       acc.add('a')
       acc.add('b')
       proof = acc.add('c')
-      dummy = RSA::ACC::Proof.new('d', proof.witness, proof.acc_value, proof.proof)
+      dummy = RSA::ACC::MembershipProof.new('d', proof.witness, proof.acc_value, proof.proof)
       expect(acc.member?(proof)).to be true
       expect(acc.member?(dummy)).to be false
     end
@@ -84,7 +84,7 @@ RSpec.describe RSA::Accumulator do
         acc = RSA::Accumulator.generate_random
         acc.add('a', 'b')
         proof = acc.add('c')
-        dummy = RSA::ACC::Proof.new('b', proof.witness, proof.acc_value, proof.proof)
+        dummy = RSA::ACC::MembershipProof.new('b', proof.witness, proof.acc_value, proof.proof)
         expect{acc.delete(dummy)}.to raise_error(RSA::ACC::Error, 'Bad witness.')
       end
     end

@@ -1,6 +1,6 @@
 require "rsa/acc/version"
 require 'rsa/acc/functions'
-require 'rsa/acc/proof'
+require 'rsa/acc/membership_proof'
 require 'rsa/acc/poe'
 
 module RSA
