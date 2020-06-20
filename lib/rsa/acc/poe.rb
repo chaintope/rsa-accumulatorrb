@@ -5,6 +5,9 @@ module RSA
     module PoE
 
       include RSA::ACC::Functions
+      extend RSA::ACC::Functions
+
+      module_function
 
       # Computes a proof +base+ ^ H(+exp+) was performed to derive +result+.
       # @param [Integer] base The known base.
@@ -28,14 +31,6 @@ module RSA
         r = exp % l
         w = (proof.pow(l, modulus) * base.pow(r, modulus)) % modulus
         w == result
-      end
-
-      # Computes a challenge.
-      # @param [Integer] base The known base.
-      # @param [Integer] exp The exponentiation.
-      # @param [Integer] result such as result = base^exp.
-      def compute_challenge(base, exp, result)
-        hash_to_prime(even_hex(base) + even_hex(exp) + even_hex(result))
       end
 
     end

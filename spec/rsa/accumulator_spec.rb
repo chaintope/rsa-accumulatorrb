@@ -70,7 +70,7 @@ RSpec.describe RSA::Accumulator do
         expect(acc.value).to eq(acc0)
         expect(acc.member?(proof)).to be false
         deleted_prime = deleted_proof.element_prime
-        expect(acc.valid?(deleted_proof.witness, deleted_prime, proof.acc_value, deleted_proof.proof, acc.n)).to be true
+        expect(RSA::ACC::PoE.valid?(deleted_proof.witness, deleted_prime, proof.acc_value, deleted_proof.proof, acc.n)).to be true
 
         # empty delete
         acc1 = acc.value

@@ -1,5 +1,7 @@
 module RSA
   module ACC
+
+    # Proof of membership of the element's inclusion in the accumulator.
     class MembershipProof
 
       include Functions
@@ -25,5 +27,6 @@ module RSA
       end
 
     end
+
   end
 end

@@ -13,6 +13,7 @@ module RSA
 
     attr_reader :n
     attr_accessor :value
+    attr_reader :g        # Initial value
 
     # Generate accumulator using RSA2048 modulus.
     # @return [RSA::Accumulator]
@@ -35,6 +36,7 @@ module RSA
     def initialize(n, value)
       @n = n
       @value = value
+      @g = value
     end
 
     # Add element to accumulator and get inclusion proof.
@@ -44,7 +46,7 @@ module RSA
       current_acc = value
       p = elements.map{|e|hash_to_prime(e)}.inject(:*)
       @value = value.pow(p, n)
-      RSA::ACC::MembershipProof.new(elements, current_acc, value, prove(current_acc, p, value, n))
+      RSA::ACC::MembershipProof.new(elements, current_acc, value, RSA::ACC::PoE.prove(current_acc, p, value, n))
     end
 
     # Check whether +other+ is same accumulator.
@@ -59,14 +61,14 @@ module RSA
     # @param [RSA::ACC::MembershipProof] proof inclusion proof.
     # @return [Boolean] If element exist in acc return true, otherwise false.
     def member?(proof)
-      valid?(proof.witness, proof.element_prime, value, proof.proof, n)
+      RSA::ACC::PoE.valid?(proof.witness, proof.element_prime, value, proof.proof, n)
     end
 
     # Remove the elements in +proofs+ from the accumulator.
     # @param [RSA::ACC::MembershipProof] proofs proofs including the elements to be removed and the witnesses.
     # @return [RSA::ACC::MembershipProof] Proof that the accumulator before the remove contained the deleted elements.
     def delete(*proofs)
-      return RSA::ACC::MembershipProof.new(proofs.map(&:element).flatten, value, value, prove(value, 1, value, n)) if proofs.empty?
+      return RSA::ACC::MembershipProof.new(proofs.map(&:element).flatten, value, value, RSA::ACC::PoE.prove(value, 1, value, n)) if proofs.empty?
 
       witnesses = proofs.map do |proof|
         p = proof.element_prime
@@ -85,7 +87,7 @@ module RSA
       end
 
       @value = new_value
-      RSA::ACC::MembershipProof.new(proofs.map{|p|p.element}.flatten, value, current_value, prove(value, proof_product, current_value, n))
+      RSA::ACC::MembershipProof.new(proofs.map{|p|p.element}.flatten, value, current_value, RSA::ACC::PoE.prove(value, proof_product, current_value, n))
     end
 
     # Computes an xi-th root of +y+ for all i = 1, ..., n in total time O(n log(n)).

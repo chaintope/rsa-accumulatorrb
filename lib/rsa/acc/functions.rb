@@ -54,6 +54,14 @@ module RSA
         [b, a - b * x.div(y)]
       end
 
+      # Computes a challenge.
+      # @param [Integer] base The known base.
+      # @param [Integer] exp The exponentiation.
+      # @param [Integer] result such as result = base^exp.
+      def compute_challenge(base, exp, result)
+        hash_to_prime(even_hex(base) + even_hex(exp) + even_hex(result))
+      end
+
       private
 
       # Convert +num+ to even hex string.
