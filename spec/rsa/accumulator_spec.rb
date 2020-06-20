@@ -53,8 +53,8 @@ RSpec.describe RSA::Accumulator do
       acc.add('b')
       proof = acc.add('c')
       dummy = RSA::ACC::Proof.new('d', proof.witness, proof.acc_value, proof.proof)
-      expect(acc.include?(proof)).to be true
-      expect(acc.include?(dummy)).to be false
+      expect(acc.member?(proof)).to be true
+      expect(acc.member?(dummy)).to be false
     end
   end
 
@@ -65,10 +65,10 @@ RSpec.describe RSA::Accumulator do
         acc.add('a', 'b')
         acc0 = acc.value
         proof = acc.add('c')
-        expect(acc.include?(proof)).to be true
+        expect(acc.member?(proof)).to be true
         deleted_proof = acc.delete(proof)
         expect(acc.value).to eq(acc0)
-        expect(acc.include?(proof)).to be false
+        expect(acc.member?(proof)).to be false
         deleted_prime = deleted_proof.element_prime
         expect(acc.valid?(deleted_proof.witness, deleted_prime, proof.acc_value, deleted_proof.proof, acc.n)).to be true
 

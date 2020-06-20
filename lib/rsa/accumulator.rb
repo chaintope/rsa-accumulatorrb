@@ -58,7 +58,7 @@ module RSA
     # Check whether +proof+#element include in accumulator.
     # @param [RSA::ACC::Proof] proof inclusion proof.
     # @return [Boolean] If element exist in acc return true, otherwise false.
-    def include?(proof)
+    def member?(proof)
       valid?(proof.witness, proof.element_prime, value, proof.proof, n)
     end
 
