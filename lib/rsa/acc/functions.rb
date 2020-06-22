@@ -32,14 +32,6 @@ module RSA
         raise ArgumentError, 'w1^x != w2^y' unless w1.pow(x, modulus) == w2.pow(y, modulus)
         a, b = egcd(x, y)
         raise ArgumentError, 'Inputs does not co-prime.' unless a * x + b * y == 1
-        if a.negative?
-          a = -a
-          w2 = w2.to_bn.mod_inverse(modulus).to_i
-        end
-        if b.negative?
-          b = -b
-          w1 = w1.to_bn.mod_inverse(modulus).to_i
-        end
         (w1.pow(b, modulus) * w2.pow(a, modulus)) % modulus
       end
 
@@ -54,9 +46,18 @@ module RSA
         [b, a - b * x.div(y)]
       end
 
-      # Computes a challenge.
+      # Computes a challenge from +params+.
+      # @param [Array[Integer]] params
+      # @return [Integer] prime number of challenge.
       def compute_challenge(*params)
         hash_to_prime(params.map{|p|even_hex(p)}.join)
+      end
+
+      # Computes hash value from +params+.
+      # @param [Array[Integer]] params
+      # @return [Integer] hash value.
+      def blake2_hash(*params)
+        RbNaCl::Hash.blake2b(params.map{|p|even_hex(p)}.join).unpack("H*").first.to_i(16)
       end
 
       private
