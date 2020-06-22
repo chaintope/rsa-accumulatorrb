@@ -64,7 +64,7 @@ module RSA
     # @param [RSA::ACC::MembershipProof] proof inclusion proof.
     # @return [Boolean] If element exist in acc return true, otherwise false.
     def member?(proof)
-      RSA::ACC::PoE.valid?(proof.witness, proof.element_prime, value, proof.proof, n)
+      RSA::ACC::PoE.verify(proof.witness, proof.element_prime, value, proof.proof, n)
     end
 
     # Verify non-membership proof.
