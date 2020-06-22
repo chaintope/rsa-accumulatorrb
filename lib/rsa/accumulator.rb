@@ -5,6 +5,8 @@ require 'securerandom'
 module RSA
   class Accumulator
 
+    using RSA::ACC::Ext
+
     include RSA::ACC::Functions
     include RSA::ACC::PoE
 
@@ -63,6 +65,31 @@ module RSA
     # @return [Boolean] If element exist in acc return true, otherwise false.
     def member?(proof)
       RSA::ACC::PoE.valid?(proof.witness, proof.element_prime, value, proof.proof, n)
+    end
+
+    # Verify non-membership proof.
+    # Verifies a non-membership proof against the current accumulator and
+    # elements `elems` whose non-inclusion is being proven.
+    # @return [Boolean]
+    def non_member?(proof)
+
+    end
+
+    # Generate non-membership proof using set of elements in current acc and non membership elements.
+    # @param [Array[String]] members The entire set of elements contained within this accumulator.
+    # @param [Array[String]] non_members Elements not included in this accumulator that you want to prove non-membership.
+    # @return [RSA::ACC::NonMembershipProof] Non-membership proof.
+    def prove_non_membership(members, non_members)
+      s = members.map{|m|hash_to_prime(m)}.inject(:*)
+      x = non_members.map{|m|hash_to_prime(m)}.inject(:*)
+
+      a, b = egcd(s, x)
+      raise ArgumentError, "Inputs not co-prime." unless a * x + b * s == 1
+
+      v = value.pow(a, n)
+      d = g.pow(b, n)
+
+      [v, d]
     end
 
     # Remove the elements in +proofs+ from the accumulator.

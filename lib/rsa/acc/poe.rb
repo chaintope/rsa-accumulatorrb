@@ -4,6 +4,8 @@ module RSA
     # Non-Interactive Proof of Exponentiation
     module PoE
 
+      using RSA::ACC::Ext
+
       include RSA::ACC::Functions
       extend RSA::ACC::Functions
 

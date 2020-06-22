@@ -4,6 +4,8 @@ module RSA
   module ACC
     module Functions
 
+      using RSA::ACC::Ext
+
       # Convert element to prime number.
       # @param [String] element an element to be converted.
       # @return [Integer] prime number.

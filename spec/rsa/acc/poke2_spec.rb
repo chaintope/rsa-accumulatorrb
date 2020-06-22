@@ -2,7 +2,10 @@ require 'spec_helper'
 
 RSpec.describe RSA::ACC::PoKE2 do
 
+  using RSA::ACC::Ext
+
   describe 'prove/verify' do
+
     context 'positive number' do
       it 'should generate proof and verify proof.' do
         # 2^20 = 1048576

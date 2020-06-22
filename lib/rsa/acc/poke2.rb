@@ -3,6 +3,8 @@ module RSA
 
     class PoKE2Proof
 
+      using RSA::ACC::Ext
+
       attr_reader :z
       attr_reader :q
       attr_reader :r
@@ -25,6 +27,8 @@ module RSA
 
     # Non-Interactive Proof of knowledge of exponent2.
     module PoKE2
+
+      using RSA::ACC::Ext
 
       include RSA::ACC::Functions
       extend RSA::ACC::Functions
