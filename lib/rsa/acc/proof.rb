@@ -28,5 +28,24 @@ module RSA
 
     end
 
+    # Proof of non-membership of the element's not inclusion in the accumulator.
+    class NonMembershipProof
+
+      attr_reader :d            # d = g^b
+      attr_reader :v            # v = A(current acc)^a
+      attr_reader :gv_inv       # gv_inv = v^{-1}
+      attr_reader :poke2_proof  # NI-PoKE2(A, v, a)
+      attr_reader :poe_proof    # NI-PoE(d, x, g*v^{-1})
+
+      def initialize(d, v, gv_inv, poke2_proof, poe_proof)
+        @d = d
+        @v = v
+        @gv_inv = gv_inv
+        @poke2_proof = poke2_proof
+        @poe_proof = poe_proof
+      end
+
+    end
+
   end
 end

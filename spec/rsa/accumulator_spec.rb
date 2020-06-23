@@ -102,4 +102,15 @@ RSpec.describe RSA::Accumulator do
     end
   end
 
+  describe "#prove_non_member" do
+    it 'should generate non membership proof.' do
+      members = %w(a b)
+      non_members = %w(c, d)
+      acc = RSA::Accumulator.generate_rsa2048
+      acc.add(*members)
+      proof = acc.prove_non_membership(members, non_members)
+      expect(acc.non_member?(non_members, proof)).to be true
+    end
+  end
+
 end

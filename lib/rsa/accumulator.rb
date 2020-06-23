@@ -43,7 +43,7 @@ module RSA
     end
 
     # Add element to accumulator and get inclusion proof.
-    # @param [String] elements an element to be added.
+    # @param [Array[String]] elements a list of elements to be added.
     # @return [RSA::ACC::MembershipProof] inclusion proof.
     def add(*elements)
       current_acc = value
@@ -67,12 +67,14 @@ module RSA
       RSA::ACC::PoE.verify(proof.witness, proof.element_prime, value, proof.proof, n)
     end
 
-    # Verify non-membership proof.
-    # Verifies a non-membership proof against the current accumulator and
-    # elements `elems` whose non-inclusion is being proven.
+    # Verifies a non-membership proof against the current accumulator and +elements+ whose non-inclusion is being proven.
+    # @param [Array[String]] elements elements whose non-inclusion is being proven.
+    # @param [RSA::ACC::NonMembershipProof] proof non-membership proof.
     # @return [Boolean]
-    def non_member?(proof)
-
+    def non_member?(elements, proof)
+      x = elements_to_prime(elements)
+      RSA::ACC::PoKE2.verify(value, proof.v, proof.poke2_proof, n) &&
+          RSA::ACC::PoE.verify(proof.d, x, proof.gv_inv, proof.poe_proof, n)
     end
 
     # Generate non-membership proof using set of elements in current acc and non membership elements.
@@ -84,12 +86,16 @@ module RSA
       x = elements_to_prime(non_members)
 
       a, b = egcd(s, x)
-      raise ArgumentError, "Inputs not co-prime." unless a * x + b * s == 1
+      raise ArgumentError, "Inputs not co-prime." unless a * s + b * x == 1
 
       v = value.pow(a, n)
       d = g.pow(b, n)
+      gv_inv = (g * v.pow(-1, n)) % n
 
-      [v, d]
+      poke2_proof = RSA::ACC::PoKE2.prove(value, a, v, n)
+      poe_proof = RSA::ACC::PoE.prove(d, x, gv_inv, n)
+
+      RSA::ACC::NonMembershipProof.new(d, v, gv_inv, poke2_proof, poe_proof)
     end
 
     # Remove the elements in +proofs+ from the accumulator.
