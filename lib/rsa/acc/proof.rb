@@ -23,7 +23,7 @@ module RSA
       # @return [Integer] prime number of element.
       def element_prime
         return nil if element.nil?
-        element.is_a?(Array) ? element.map{|e|hash_to_prime(e)}.inject(:*) : hash_to_prime(element)
+        element.is_a?(Array) ? elements_to_prime(element) : hash_to_prime(element)
       end
 
     end

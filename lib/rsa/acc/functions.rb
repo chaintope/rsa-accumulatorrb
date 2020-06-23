@@ -7,7 +7,7 @@ module RSA
       using RSA::ACC::Ext
 
       # Convert element to prime number.
-      # @param [String] element an element to be converted.
+      # @param [Array[String] elements an element to be converted.
       # @return [Integer] prime number.
       def hash_to_prime(element)
         nonce = 0
@@ -20,6 +20,13 @@ module RSA
           end
           nonce += 1
         end
+      end
+
+      # Converts a list of elements to an product of prime numbers.
+      # @param [Array[String]] elements a list of element.
+      # @return [Integer] an product of prime numbers
+      def elements_to_prime(elements)
+        elements.map{|e|hash_to_prime(e)}.inject(:*)
       end
 
       # Computes (xy) th root of g given xth and yth roots of g. x and y is co-prime.

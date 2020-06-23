@@ -47,7 +47,7 @@ module RSA
     # @return [RSA::ACC::MembershipProof] inclusion proof.
     def add(*elements)
       current_acc = value
-      p = elements.map{|e|hash_to_prime(e)}.inject(:*)
+      p = elements_to_prime(elements)
       @value = value.pow(p, n)
       RSA::ACC::MembershipProof.new(elements, current_acc, value, RSA::ACC::PoE.prove(current_acc, p, value, n))
     end
@@ -80,8 +80,8 @@ module RSA
     # @param [Array[String]] non_members Elements not included in this accumulator that you want to prove non-membership.
     # @return [RSA::ACC::NonMembershipProof] Non-membership proof.
     def prove_non_membership(members, non_members)
-      s = members.map{|m|hash_to_prime(m)}.inject(:*)
-      x = non_members.map{|m|hash_to_prime(m)}.inject(:*)
+      s = elements_to_prime(members)
+      x = elements_to_prime(non_members)
 
       a, b = egcd(s, x)
       raise ArgumentError, "Inputs not co-prime." unless a * x + b * s == 1
