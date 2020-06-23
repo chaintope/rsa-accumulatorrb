@@ -1,8 +1,7 @@
-# RSA::Accumulator
+# RSA Accumulator for Ruby [![Build Status](https://travis-ci.org/chaintope/rsa-accumulatorrb.svg?branch=master)](https://travis-ci.org/chaintope/rsa-accumulatorrb) [![Gem Version](https://badge.fury.io/rb/rsa-accumulator.svg)](https://badge.fury.io/rb/rsa-accumulator) [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/rsa/accumulator`. To experiment with that code, run `bin/console` for an interactive prompt.
 
-TODO: Delete this and the text above, and describe your gem
+Cryptographic accumulator based on the strong RSA assumption [BBF18](https://eprint.iacr.org/2018/1188.pdf) in Ruby.
 
 ## Installation
 
@@ -22,22 +21,48 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+### Setup accumulator
 
-## Development
+First, initialize the accumulator. Since the accumulator uses groups of unknown order, it can be generated in following ways:
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+    require 'rsa-accumulator'
+    
+    # using RSA modulus published by RSA Laboratory
+    acc = RSA::Accumulator.generate_rsa2048
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+    # using Random RSA modulus with a specified bit length(default value is )
+    acc = RSA::Accumulator.generate_random(2048)
 
-## Contributing
+### Adding elements and membership proof
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/rsa-accumulator. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+You can add arbitrary String data to the accumulator.
 
-## License
+    acc.add('a', 'b')
+    proof = acc.add('c')
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+You can use inclusion proof to prove that an element exists in an accumulator.
 
-## Code of Conduct
+    acc.member?(proof)
 
-Everyone interacting in the RSA::Accumulator project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/rsa-accumulator/blob/master/CODE_OF_CONDUCT.md).
+### Non membership proof
+
+You can generate non-membership proof and prove that the elements does not exist in the accumulator.
+
+    members = %w(a b)
+    non_members = %w(c, d)
+    acc.add(*members)
+    proof = acc.prove_non_membership(members, non_members)
+    acc.non_member?(non_members, proof)
+    => true
+
+### Delete element from accumulator
+
+You can remove elements from the accumulator by providing the inclusion proof.
+
+    acc.add('a', 'b')
+    proof = acc.add('c')
+    acc.delete(proof)
+    
+    acc.member?(proof)
+    => false
+    
