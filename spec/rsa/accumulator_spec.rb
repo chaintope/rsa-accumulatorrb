@@ -113,4 +113,31 @@ RSpec.describe RSA::Accumulator do
     end
   end
 
+  describe '#prove_membership' do
+    context 'holding elements' do
+      it 'should generate inclusion proof from holding products.' do
+        acc = RSA::Accumulator.generate_random(hold_elements: true)
+        acc.add(*%w(a b c d e f))
+        proof = acc.prove_membership('c')
+        expect(acc.member?(proof)).to be true
+        proof = acc.prove_membership(*%w(b e))
+        expect(acc.member?(proof)).to be true
+        proof_be = acc.prove_membership(*%w(b e))
+        acc.delete(acc.prove_membership('b'))
+        expect(acc.prove_membership('b')).to be nil
+        expect(acc.member?(proof_be)).to be false
+        expect(acc.prove_membership('g')).to be nil
+        expect(acc.prove_membership(*%w(b g))).to be nil
+      end
+    end
+
+    context 'not holding elements' do
+      it 'should raise error.' do
+        acc = RSA::Accumulator.generate_random
+        acc.add(*%w(a b c d e f))
+        expect{acc.prove_membership('c')}.to raise_error(RSA::ACC::Error, 'This accumulator does not hold the product of the elements.')
+      end
+    end
+  end
+
 end

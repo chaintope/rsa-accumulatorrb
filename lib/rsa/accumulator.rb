@@ -16,30 +16,36 @@ module RSA
 
     attr_reader :n
     attr_accessor :value
-    attr_reader :g        # Initial value
+    attr_reader :g              # Initial value
+    attr_reader :hold_elements  # tha flag which indicate hold product of all elements.
+    attr_accessor :products     # (Optional) product of all elements in Accumulator
 
     # Generate accumulator using RSA2048 modulus.
     # @return [RSA::Accumulator]
-    def self.generate_rsa2048
-      new(RSA2048_MODULUS, RSA2048_UNKNOWN_ELEM)
+    def self.generate_rsa2048(hold_elements: false)
+      new(RSA2048_MODULUS, RSA2048_UNKNOWN_ELEM, hold_elements)
     end
 
     # Generate accumulator with random modulus.
     # @param [Integer] bit_length bit length of accumulator. Default: 3072 bits.
     # @return [RSA::Accumulator]
-    def self.generate_random(bit_length = 3072)
+    def self.generate_random(bit_length = 3072, hold_elements: false)
       n = OpenSSL::PKey::RSA.generate(bit_length).n.to_i
-      new(n, SecureRandom.random_number(n))
+      new(n, SecureRandom.random_number(n), hold_elements)
     end
 
     # Initialize accumulator
     # @param [Integer] n modulus
     # @param [Integer] value initial value
+    # @param [Boolean] hold_elements
     # @return [RSA::Accumulator]
-    def initialize(n, value)
+    def initialize(n, value, hold_elements)
       @n = n
       @value = value
       @g = value
+      @hold_elements = hold_elements
+      @products = 1 if hold_elements
+      puts "The feature which hold product of all elements is practical feature." if hold_elements
     end
 
     # Add element to accumulator and get inclusion proof.
@@ -48,7 +54,13 @@ module RSA
     def add(*elements)
       current_acc = value
       p = elements_to_prime(elements)
-      @value = value.pow(p, n)
+      self.value = value.pow(p, n)
+      if hold_elements
+        elements.each do |e|
+          p = hash_to_prime(e)
+          self.products *= p unless products.modulo(p) == 0
+        end
+      end
       RSA::ACC::MembershipProof.new(elements, current_acc, value, RSA::ACC::PoE.prove(current_acc, p, value, n))
     end
 
@@ -75,6 +87,19 @@ module RSA
       x = elements_to_prime(elements)
       RSA::ACC::PoKE2.verify(value, proof.v, proof.poke2_proof, n) &&
           RSA::ACC::PoE.verify(proof.d, x, proof.gv_inv, proof.poe_proof, n)
+    end
+
+    # Generate membership proof for +elements+.
+    # This method is only available if hold_elements is set to true when the accumulator is initialized.
+    # @param [Array[String]] elements The elements for which you want to generate an membership proof.
+    # @return [RSA::ACC::MembershipProof] a membership proof for +elements+. If +elements+ does not exist in accumulator, return nil.
+    # @raise RSA::ACC::Error.new This exception is raised when hold_elements is set to false.
+    def prove_membership(*elements)
+      raise RSA::ACC::Error.new 'This accumulator does not hold the product of the elements.' unless hold_elements
+      x = elements_to_prime(elements)
+      return nil unless products.modulo(x) == 0
+      witness = g.pow(products / x, n)
+      RSA::ACC::MembershipProof.new(elements, witness, value, RSA::ACC::PoE.prove(witness, x, value, n))
     end
 
     # Generate non-membership proof using set of elements in current acc and non membership elements.
@@ -119,8 +144,8 @@ module RSA
           proof_product *= w[0]
         end
       end
-
-      @value = new_value
+      self.products = self.products / proof_product if hold_elements
+      self.value = new_value
       RSA::ACC::MembershipProof.new(proofs.map{|p|p.element}.flatten, value, current_value, RSA::ACC::PoE.prove(value, proof_product, current_value, n))
     end
 
@@ -130,8 +155,8 @@ module RSA
     def root_factor(*f)
       return [value] if f.size == 1
       half_n = f.size / 2
-      g_l = RSA::Accumulator.new(n, value.pow(f[0...half_n].map.inject(:*), n))
-      g_r = RSA::Accumulator.new(n, value.pow(f[half_n..-1].map.inject(:*), n))
+      g_l = RSA::Accumulator.new(n, value.pow(f[0...half_n].map.inject(:*), n), false)
+      g_r = RSA::Accumulator.new(n, value.pow(f[half_n..-1].map.inject(:*), n), false)
       l = g_r.root_factor(*f[0...half_n])
       r = g_l.root_factor(*f[half_n..-1])
       [l, r].flatten

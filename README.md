@@ -66,3 +66,15 @@ You can remove elements from the accumulator by providing the inclusion proof.
     acc.member?(proof)
     => false
     
+### Holding the product of all elements
+
+This feature is experimental and has not been checked against large amounts of data.
+
+    acc = RSA::Accumulator.generate_rsa2048(hold_elements: true)
+    acc.add('a', 'b', 'c')
+    acc.add('d', 'e')
+    
+    # acc has product of all elements in acc#products, so you can get membership proof.
+    proof = acc.prove_membership('b')
+
+    
