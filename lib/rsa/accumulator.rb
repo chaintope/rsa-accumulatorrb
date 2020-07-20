@@ -23,7 +23,7 @@ module RSA
     # Generate accumulator using RSA2048 modulus.
     # @return [RSA::Accumulator]
     def self.generate_rsa2048(hold_elements: false)
-      new(RSA2048_MODULUS, RSA2048_UNKNOWN_ELEM, hold_elements)
+      new(RSA2048_MODULUS, RSA2048_UNKNOWN_ELEM, RSA2048_UNKNOWN_ELEM, hold_elements)
     end
 
     # Generate accumulator with random modulus.
@@ -31,20 +31,23 @@ module RSA
     # @return [RSA::Accumulator]
     def self.generate_random(bit_length = 3072, hold_elements: false)
       n = OpenSSL::PKey::RSA.generate(bit_length).n.to_i
-      new(n, SecureRandom.random_number(n), hold_elements)
+      initial_value = SecureRandom.random_number(n)
+      new(n, initial_value, initial_value, hold_elements)
     end
 
     # Initialize accumulator
     # @param [Integer] n modulus
-    # @param [Integer] value initial value
+    # @param [Integer] value a value of acc.
+    # @param [Integer] initial_acc a value of initial acc.
     # @param [Boolean] hold_elements
+    # @param [Integer] products product of all elements in acc, this param is enable only +hold_elements+ set true.
     # @return [RSA::Accumulator]
-    def initialize(n, value, hold_elements)
+    def initialize(n, value, initial_acc, hold_elements, products = 1)
       @n = n
       @value = value
-      @g = value
+      @g = initial_acc
       @hold_elements = hold_elements
-      @products = 1 if hold_elements
+      @products = products if hold_elements
       puts "The feature which hold product of all elements is practical feature." if hold_elements
     end
 
@@ -155,8 +158,8 @@ module RSA
     def root_factor(*f)
       return [value] if f.size == 1
       half_n = f.size / 2
-      g_l = RSA::Accumulator.new(n, value.pow(f[0...half_n].map.inject(:*), n), false)
-      g_r = RSA::Accumulator.new(n, value.pow(f[half_n..-1].map.inject(:*), n), false)
+      g_l = RSA::Accumulator.new(n, value.pow(f[0...half_n].map.inject(:*), n), g, false)
+      g_r = RSA::Accumulator.new(n, value.pow(f[half_n..-1].map.inject(:*), n), g, false)
       l = g_r.root_factor(*f[0...half_n])
       r = g_l.root_factor(*f[half_n..-1])
       [l, r].flatten
