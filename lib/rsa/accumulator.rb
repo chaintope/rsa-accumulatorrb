@@ -61,7 +61,7 @@ module RSA
       if hold_elements
         elements.each do |e|
           p = hash_to_prime(e)
-          self.products *= p unless products.modulo(p) == 0
+          self.products *= p
         end
       end
       RSA::ACC::MembershipProof.new(elements, current_acc, value, RSA::ACC::PoE.prove(current_acc, p, value, n))
