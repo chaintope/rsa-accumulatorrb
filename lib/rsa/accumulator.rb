@@ -58,9 +58,7 @@ module RSA
       current_acc = value
       p = elements_to_prime(elements)
       self.value = value.pow(p, n)
-      if hold_elements
-        self.products *= p
-      end
+      self.products *= p if hold_elements
       RSA::ACC::MembershipProof.new(elements, current_acc, value, RSA::ACC::PoE.prove(current_acc, p, value, n))
     end
 
