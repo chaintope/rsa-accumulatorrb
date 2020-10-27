@@ -28,7 +28,7 @@ First, initialize the accumulator. Since the accumulator uses groups of unknown 
     require 'rsa-accumulator'
     
     # using RSA modulus published by RSA Laboratory
-    acc = RSA::Accumulator.generate_rsa2048
+    acc = RSA::Accumulator.generate_rsa3072
 
     # using Random RSA modulus with a specified bit length(default value is )
     acc = RSA::Accumulator.generate_random(2048)
@@ -70,7 +70,7 @@ You can remove elements from the accumulator by providing the inclusion proof.
 
 This feature is experimental and has not been checked against large amounts of data.
 
-    acc = RSA::Accumulator.generate_rsa2048(hold_elements: true)
+    acc = RSA::Accumulator.generate_rsa3072(hold_elements: true)
     acc.add('a', 'b', 'c')
     acc.add('d', 'e')
     

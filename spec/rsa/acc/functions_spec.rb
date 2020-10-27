@@ -20,19 +20,19 @@ RSpec.describe RSA::ACC::Functions do
     context 'Inputs is co-prime' do
       it 'should return xyth root.' do
         x, y, z = 13, 17 ,19
-        xth_root = 2.pow(y * z, RSA::Accumulator::RSA2048_MODULUS)
-        yth_root = 2.pow(x * z, RSA::Accumulator::RSA2048_MODULUS)
-        xyth_root = 2.pow(z, RSA::Accumulator::RSA2048_MODULUS)
-        expect(functions.shamir_trick(xth_root, yth_root, x, y, RSA::Accumulator::RSA2048_MODULUS)).to eq(xyth_root)
+        xth_root = 2.pow(y * z, RSA::Accumulator::RSA3072_MODULUS)
+        yth_root = 2.pow(x * z, RSA::Accumulator::RSA3072_MODULUS)
+        xyth_root = 2.pow(z, RSA::Accumulator::RSA3072_MODULUS)
+        expect(functions.shamir_trick(xth_root, yth_root, x, y, RSA::Accumulator::RSA3072_MODULUS)).to eq(xyth_root)
       end
     end
 
     context 'Inputs is not co-prime' do
       it 'should raise error.' do
         x, y, z = 7, 14 ,19
-        xth_root = 2.pow(y * z, RSA::Accumulator::RSA2048_MODULUS)
-        yth_root = 2.pow(x * z, RSA::Accumulator::RSA2048_MODULUS)
-        expect{functions.shamir_trick(xth_root, yth_root, x, y, RSA::Accumulator::RSA2048_MODULUS)}.to raise_error(ArgumentError, 'Inputs does not co-prime.')
+        xth_root = 2.pow(y * z, RSA::Accumulator::RSA3072_MODULUS)
+        yth_root = 2.pow(x * z, RSA::Accumulator::RSA3072_MODULUS)
+        expect{functions.shamir_trick(xth_root, yth_root, x, y, RSA::Accumulator::RSA3072_MODULUS)}.to raise_error(ArgumentError, 'Inputs does not co-prime.')
       end
     end
   end

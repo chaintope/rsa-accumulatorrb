@@ -42,7 +42,7 @@ module RSA
       # @param [Integer] modulus
       # @return [RSA::ACC::PoKE2Proof] a proof.
       def prove(base, exp, result, modulus)
-        g = RSA::Accumulator::RSA2048_UNKNOWN_ELEM
+        g = RSA::Accumulator::RSA3072_UNKNOWN_ELEM
         z = g.pow(exp, modulus)
         l = compute_challenge(base, result, z)
         alpha = blake2_hash(base, result, z, l)
@@ -57,7 +57,7 @@ module RSA
       # @param [Integer] modulus
       # @return [Boolean] Returns true for successful verification, false otherwise.
       def verify(base, result, proof, modulus)
-        g = RSA::Accumulator::RSA2048_UNKNOWN_ELEM
+        g = RSA::Accumulator::RSA3072_UNKNOWN_ELEM
         l = compute_challenge(base, result, proof.z)
         alpha = blake2_hash(base, result, proof.z, l)
         lhs = (proof.q.pow(l, modulus) * ((base * g.pow(alpha, modulus) % modulus)).pow(proof.r, modulus)) % modulus
