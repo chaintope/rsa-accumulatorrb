@@ -4,6 +4,7 @@ addons:
     packages:
       - libsodium-dev
 rvm:
-  - 2.5.5
-  - 2.6.3
-  - 2.7.0
+  - 2.5.8
+  - 2.6.6
+  - 2.7.2
+  - 3.0.0
