@@ -7,7 +7,7 @@ module RSA
       using RSA::ACC::Ext
 
       # Convert element to prime number.
-      # @param [Array[String] elements an element to be converted.
+      # @param [String] element an element to be converted.
       # @return [Integer] prime number.
       def hash_to_prime(element)
         nonce = 0
