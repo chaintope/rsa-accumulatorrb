@@ -48,7 +48,6 @@ module RSA
       @g = initial_acc
       @hold_elements = hold_elements
       @products = products if hold_elements
-      puts "The feature which hold product of all elements is practical feature." if hold_elements
     end
 
     # Add element to accumulator and get inclusion proof.
