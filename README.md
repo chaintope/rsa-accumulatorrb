@@ -1,4 +1,4 @@
-# RSA Accumulator for Ruby [![Build Status](https://travis-ci.org/chaintope/rsa-accumulatorrb.svg?branch=master)](https://travis-ci.org/chaintope/rsa-accumulatorrb) [![Gem Version](https://badge.fury.io/rb/rsa-accumulator.svg)](https://badge.fury.io/rb/rsa-accumulator) [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
+# RSA Accumulator for Ruby [![Build Status](https://github.com/chaintope/rsa-accumulatorrb/actions/workflows/ruby.yml/badge.svg?branch=master)](https://github.com/chaintope/rsa-accumulatorrb/actions/workflows/ruby.yml) [![Gem Version](https://badge.fury.io/rb/rsa-accumulator.svg)](https://badge.fury.io/rb/rsa-accumulator) [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 
 
 Cryptographic accumulator based on the strong RSA assumption [BBF18](https://eprint.iacr.org/2018/1188.pdf) in Ruby.
