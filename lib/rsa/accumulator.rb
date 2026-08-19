@@ -82,8 +82,13 @@ module RSA
     # @return [Boolean]
     def non_member?(elements, proof)
       x = elements_to_prime(elements)
+      return false unless valid_group_elem?(proof.v)
+      return false unless valid_group_elem?(proof.d)
+      # g * v^{-1} must be derived by the verifier. If proof#gv_inv were used as-is,
+      # a prover could pick an arbitrary d and claim gv_inv = d^x, which passes for any x.
+      gv_inv = (g * proof.v.pow(-1, n)) % n
       RSA::ACC::PoKE2.verify(value, proof.v, proof.poke2_proof, n) &&
-          RSA::ACC::PoE.verify(proof.d, x, proof.gv_inv, proof.poe_proof, n)
+          RSA::ACC::PoE.verify(proof.d, x, gv_inv, proof.poe_proof, n)
     end
 
     # Generate membership proof for +elements+.
@@ -157,6 +162,15 @@ module RSA
       l = g_r.root_factor(*f[0...half_n])
       r = g_l.root_factor(*f[half_n..-1])
       [l, r].flatten
+    end
+
+    private
+
+    # Check whether +elem+ is a non-degenerate element of the group Z_n^*.
+    # @param [Integer] elem an element supplied by an untrusted prover.
+    # @return [Boolean]
+    def valid_group_elem?(elem)
+      elem.is_a?(Integer) && elem > 1 && elem < (n - 1) && elem.gcd(n) == 1
     end
 
   end

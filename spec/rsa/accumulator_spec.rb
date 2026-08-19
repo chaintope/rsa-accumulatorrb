@@ -113,6 +113,50 @@ RSpec.describe RSA::Accumulator do
     end
   end
 
+  describe '#non_member?' do
+    let(:acc) do
+      a = RSA::Accumulator.generate_rsa2048
+      a.add('a', 'b')
+      a
+    end
+
+    context 'with a forged proof' do
+      it 'should not accept a gv_inv chosen by the prover.' do
+        # A prover picks an arbitrary d and claims gv_inv = d^x, so that NI-PoE passes
+        # for any x. v = acc.value(a = 1) makes NI-PoKE2 pass as well.
+        x = elements_to_prime(['a'])
+        v = acc.value
+        d = 3
+        gv_inv = d.pow(x, acc.n)
+        forged = RSA::ACC::NonMembershipProof.new(
+            d, v, gv_inv,
+            RSA::ACC::PoKE2.prove(acc.value, 1, v, acc.n),
+            RSA::ACC::PoE.prove(d, x, gv_inv, acc.n))
+        expect(acc.non_member?(['a'], forged)).to be false
+      end
+
+      it 'should ignore gv_inv in the proof.' do
+        non_members = %w(c d)
+        proof = acc.prove_non_membership(%w(a b), non_members)
+        tampered = RSA::ACC::NonMembershipProof.new(
+            proof.d, proof.v, 12345, proof.poke2_proof, proof.poe_proof)
+        expect(acc.non_member?(non_members, tampered)).to be true
+      end
+    end
+
+    context 'with a degenerate group element' do
+      it 'should return false without raising.' do
+        non_members = %w(c d)
+        proof = acc.prove_non_membership(%w(a b), non_members)
+        [0, 1, acc.n - 1, acc.n].each do |bad|
+          bad_proof = RSA::ACC::NonMembershipProof.new(
+              proof.d, bad, proof.gv_inv, proof.poke2_proof, proof.poe_proof)
+          expect(acc.non_member?(non_members, bad_proof)).to be false
+        end
+      end
+    end
+  end
+
   describe '#prove_membership' do
     context 'holding elements' do
       it 'should generate inclusion proof from holding products.' do

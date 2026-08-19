@@ -33,7 +33,7 @@ module RSA
 
       attr_reader :d            # d = g^b
       attr_reader :v            # v = A(current acc)^a
-      attr_reader :gv_inv       # gv_inv = v^{-1}
+      attr_reader :gv_inv       # gv_inv = g * v^{-1}. Advisory only: the verifier re-derives this value and does not trust it.
       attr_reader :poke2_proof  # NI-PoKE2(A, v, a)
       attr_reader :poe_proof    # NI-PoE(d, x, g*v^{-1})
 
