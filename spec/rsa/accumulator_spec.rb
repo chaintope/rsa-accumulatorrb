@@ -118,6 +118,32 @@ RSpec.describe RSA::Accumulator do
     end
   end
 
+  describe '.generate_with_modulus' do
+    it 'should build an accumulator on the given modulus.' do
+      n = RSA::Accumulator::RSA2048_MODULUS
+      acc = RSA::Accumulator.generate_with_modulus(n)
+      expect(acc.n).to eq(n)
+      expect(acc).to eq(RSA::Accumulator.generate_rsa2048)
+      proof = acc.add('a')
+      expect(acc.member?(proof)).to be true
+    end
+
+    it 'should reject a modulus that is not an odd integer greater than 4.' do
+      [nil, 'abc', 4, 9.0, 15 * 2].each do |bad|
+        expect { RSA::Accumulator.generate_with_modulus(bad) }.to raise_error(ArgumentError)
+      end
+    end
+  end
+
+  describe '.generate_random' do
+    it 'should not use a degenerate initial value.' do
+      acc = RSA::Accumulator.generate_random(1024)
+      expect(acc.g).to be > 1
+      expect(acc.g).to be < acc.n - 1
+      expect(acc.g.gcd(acc.n)).to eq(1)
+    end
+  end
+
   describe 'quotient group Z_n^* / {+-1}' do
     it 'should keep every published group element normalized.' do
       acc = RSA::Accumulator.generate_rsa2048

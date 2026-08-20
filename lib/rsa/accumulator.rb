@@ -20,18 +20,44 @@ module RSA
     attr_reader :hold_elements  # tha flag which indicate hold product of all elements.
     attr_accessor :products     # (Optional) product of all elements in Accumulator
 
-    # Generate accumulator using RSA2048 modulus.
+    # Generate accumulator using the RSA-2048 challenge modulus.
+    # Nobody is known to hold its factorization, so this requires no trusted setup and is
+    # the right choice whenever the party running the accumulator is not trusted by the
+    # party verifying its proofs.
     # @return [RSA::Accumulator]
     def self.generate_rsa2048(hold_elements: false)
       new(RSA2048_MODULUS, RSA2048_UNKNOWN_ELEM, RSA2048_UNKNOWN_ELEM, hold_elements)
     end
 
+    # Generate accumulator with an externally supplied modulus +n+ of unknown factorization.
+    # Use this with a modulus produced by a trusted setup ceremony(e.g. a multi-party
+    # computation) when the RSA-2048 modulus is not desired.
+    # @param [Integer] n modulus whose factorization is unknown to every participant.
+    # @return [RSA::Accumulator]
+    def self.generate_with_modulus(n, hold_elements: false)
+      raise ArgumentError, 'modulus must be an odd integer greater than 4.' unless n.is_a?(Integer) && n > 4 && n.odd?
+      new(n, RSA2048_UNKNOWN_ELEM, RSA2048_UNKNOWN_ELEM, hold_elements)
+    end
+
     # Generate accumulator with random modulus.
+    #
+    # WARNING: this is a TRUSTED SETUP. The modulus comes from a freshly generated RSA key,
+    # so the caller learns its factorization. Anyone who knows p and q can compute an x-th
+    # root of any value and therefore forge a membership proof for an element that was never
+    # added, and forge a non-membership proof for an element that was. The factorization is
+    # not retained by this method, but it existed in this process, so the resulting
+    # accumulator is only sound for verifiers who trust the caller. Use
+    # +generate_rsa2048+ or +generate_with_modulus+ when that trust does not hold.
+    #
     # @param [Integer] bit_length bit length of accumulator. Default: 3072 bits.
     # @return [RSA::Accumulator]
     def self.generate_random(bit_length = 3072, hold_elements: false)
       n = OpenSSL::PKey::RSA.generate(bit_length).n.to_i
       initial_value = SecureRandom.random_number(n)
+      # Reject the degenerate elements 0, 1 and n - 1, and anything sharing a factor with n.
+      until initial_value > 1 && initial_value < n - 1 && initial_value.gcd(n) == 1
+        initial_value = SecureRandom.random_number(n)
+      end
       new(n, initial_value, initial_value, hold_elements)
     end
 

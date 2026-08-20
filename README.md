@@ -23,15 +23,29 @@ Or install it yourself as:
 
 ### Setup accumulator
 
-First, initialize the accumulator. Since the accumulator uses groups of unknown order, it can be generated in following ways:
+First, initialize the accumulator. The accumulator works in a group of unknown order, so its
+security depends on **nobody knowing the factorization of the modulus**. There are three ways
+to obtain one:
 
     require 'rsa-accumulator'
-    
-    # using RSA modulus published by RSA Laboratory
+
+    # 1. RSA-2048, the modulus published by RSA Laboratories. Its factorization has never
+    #    been found, so no trusted setup is required. This is the recommended default.
     acc = RSA::Accumulator.generate_rsa2048
 
-    # using Random RSA modulus with a specified bit length(default value is )
+    # 2. A modulus you obtained elsewhere, e.g. from a multi-party trusted setup ceremony.
+    acc = RSA::Accumulator.generate_with_modulus(n)
+
+    # 3. A freshly generated random RSA modulus with the given bit length (default: 3072).
     acc = RSA::Accumulator.generate_random(2048)
+
+> [!WARNING]
+> `generate_random` is a **trusted setup**. It derives the modulus from a newly generated RSA
+> key, so the process that calls it learns `p` and `q`. Anyone holding the factorization can
+> compute an x-th root of any value, and can therefore forge a membership proof for an element
+> that was never added, as well as a non-membership proof for an element that was. Use it only
+> when every verifier of the resulting proofs trusts the party that created the accumulator.
+> Otherwise use `generate_rsa2048` or `generate_with_modulus`.
 
 ### Adding elements and membership proof
 
