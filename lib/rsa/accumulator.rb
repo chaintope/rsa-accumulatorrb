@@ -15,7 +15,7 @@ module RSA
     RSA2048_UNKNOWN_ELEM = 2
 
     attr_reader :n
-    attr_accessor :value
+    attr_reader :value
     attr_reader :g              # Initial value
     attr_reader :hold_elements  # tha flag which indicate hold product of all elements.
     attr_accessor :products     # (Optional) product of all elements in Accumulator
@@ -44,10 +44,18 @@ module RSA
     # @return [RSA::Accumulator]
     def initialize(n, value, initial_acc, hold_elements, products = 1)
       @n = n
-      @value = value
-      @g = initial_acc
+      self.value = value
+      @g = normalize(initial_acc, n)
       @hold_elements = hold_elements
       @products = products if hold_elements
+    end
+
+    # Set the accumulator value. The value is stored as the canonical representative of the
+    # quotient group Z_n^* / {+-1}, so that the known order-2 element -1 cannot be used to
+    # break the soundness of NI-PoE and NI-PoKE2.
+    # @param [Integer] value a value of acc.
+    def value=(value)
+      @value = normalize(value, n)
     end
 
     # Add element to accumulator and get inclusion proof.
@@ -84,11 +92,13 @@ module RSA
       x = elements_to_prime(elements)
       return false unless valid_group_elem?(proof.v)
       return false unless valid_group_elem?(proof.d)
+      v = normalize(proof.v, n)
+      d = normalize(proof.d, n)
       # g * v^{-1} must be derived by the verifier. If proof#gv_inv were used as-is,
       # a prover could pick an arbitrary d and claim gv_inv = d^x, which passes for any x.
-      gv_inv = (g * proof.v.pow(-1, n)) % n
-      RSA::ACC::PoKE2.verify(value, proof.v, proof.poke2_proof, n) &&
-          RSA::ACC::PoE.verify(proof.d, x, gv_inv, proof.poe_proof, n)
+      gv_inv = normalize(g * v.pow(-1, n), n)
+      RSA::ACC::PoKE2.verify(value, v, proof.poke2_proof, n) &&
+          RSA::ACC::PoE.verify(d, x, gv_inv, proof.poe_proof, n)
     end
 
     # Generate membership proof for +elements+.
@@ -100,7 +110,7 @@ module RSA
       raise RSA::ACC::Error.new 'This accumulator does not hold the product of the elements.' unless hold_elements
       x = elements_to_prime(elements)
       return nil unless products.modulo(x) == 0
-      witness = g.pow(products / x, n)
+      witness = normalize(g.pow(products / x, n), n)
       RSA::ACC::MembershipProof.new(elements, witness, value, RSA::ACC::PoE.prove(witness, x, value, n))
     end
 
@@ -115,9 +125,9 @@ module RSA
       a, b = egcd(s, x)
       raise ArgumentError, "Inputs not co-prime." unless a * s + b * x == 1
 
-      v = value.pow(a, n)
-      d = g.pow(b, n)
-      gv_inv = (g * v.pow(-1, n)) % n
+      v = normalize(value.pow(a, n), n)
+      d = normalize(g.pow(b, n), n)
+      gv_inv = normalize(g * v.pow(-1, n), n)
 
       poke2_proof = RSA::ACC::PoKE2.prove(value, a, v, n)
       poe_proof = RSA::ACC::PoE.prove(d, x, gv_inv, n)
@@ -133,7 +143,7 @@ module RSA
 
       witnesses = proofs.map do |proof|
         p = proof.element_prime
-        raise RSA::ACC::Error, 'Bad witness.' unless proof.witness.pow(p, n) == value
+        raise RSA::ACC::Error, 'Bad witness.' unless normalize(proof.witness.pow(p, n), n) == value
         [p, proof.witness]
       end
 
@@ -170,7 +180,10 @@ module RSA
     # @param [Integer] elem an element supplied by an untrusted prover.
     # @return [Boolean]
     def valid_group_elem?(elem)
-      elem.is_a?(Integer) && elem > 1 && elem < (n - 1) && elem.gcd(n) == 1
+      return false unless elem.is_a?(Integer)
+      y = normalize(elem, n)
+      # y == 1 covers both 1 and n - 1, which are the identity and the order-2 element.
+      y > 1 && y.gcd(n) == 1
     end
 
   end

@@ -17,9 +17,11 @@ module RSA
       # @param [Integer] result such as result = base^exp.
       # @param [Integer] modulus modulus using computation.
       def prove(base, exp, result, modulus)
+        base = normalize(base, modulus)
+        result = normalize(result, modulus)
         l = compute_challenge(base, exp, result)
         q = exp / l
-        base.pow(q, modulus)
+        normalize(base.pow(q, modulus), modulus)
       end
 
       # Verifies that base^exp = result using the given proof to avoid computation.
@@ -29,9 +31,12 @@ module RSA
       # @param [Integer] proof an proof.
       # @param [Integer] modulus modulus using computation.
       def verify(base, exp, result, proof, modulus)
+        base = normalize(base, modulus)
+        result = normalize(result, modulus)
+        proof = normalize(proof, modulus)
         l = compute_challenge(base, exp, result)
         r = exp % l
-        w = (proof.pow(l, modulus) * base.pow(r, modulus)) % modulus
+        w = normalize(proof.pow(l, modulus) * base.pow(r, modulus), modulus)
         w == result
       end
 

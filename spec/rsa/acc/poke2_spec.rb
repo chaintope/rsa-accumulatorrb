@@ -4,6 +4,23 @@ RSpec.describe RSA::ACC::PoKE2 do
 
   using RSA::ACC::Ext
 
+  include RSA::ACC::Functions
+
+  describe 'quotient group Z_n^* / {+-1}' do
+    it 'should treat an element and its negation as the same element.' do
+      modulus = RSA::Accumulator::RSA2048_MODULUS
+      base = 2
+      exp = hash_to_prime('a')
+      result = normalize(base.pow(exp, modulus), modulus)
+      proof = RSA::ACC::PoKE2.prove(base, exp, result, modulus)
+      expect(proof.z).to eq(normalize(proof.z, modulus))
+      expect(proof.q).to eq(normalize(proof.q, modulus))
+      expect(RSA::ACC::PoKE2.verify(base, result, proof, modulus)).to be true
+      negated = RSA::ACC::PoKE2Proof.new(modulus - proof.z, modulus - proof.q, proof.r)
+      expect(RSA::ACC::PoKE2.verify(modulus - base, modulus - result, negated, modulus)).to be true
+    end
+  end
+
   describe 'prove/verify' do
 
     context 'positive number' do

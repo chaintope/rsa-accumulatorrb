@@ -43,11 +43,14 @@ module RSA
       # @return [RSA::ACC::PoKE2Proof] a proof.
       def prove(base, exp, result, modulus)
         g = RSA::Accumulator::RSA2048_UNKNOWN_ELEM
-        z = g.pow(exp, modulus)
+        base = normalize(base, modulus)
+        result = normalize(result, modulus)
+        z = normalize(g.pow(exp, modulus), modulus)
         l = compute_challenge(base, result, z)
         alpha = blake2_hash(base, result, z, l)
         q, r = exp.divmod(l)
-        RSA::ACC::PoKE2Proof.new(z, ((base * g.pow(alpha, modulus)) % modulus).pow(q, modulus), r)
+        u = (base * g.pow(alpha, modulus)) % modulus
+        RSA::ACC::PoKE2Proof.new(z, normalize(u.pow(q, modulus), modulus), r)
       end
 
       # Verifies that the prover knows +exp+ s.t. +base+ ^ +exp+ = +result+
@@ -58,10 +61,15 @@ module RSA
       # @return [Boolean] Returns true for successful verification, false otherwise.
       def verify(base, result, proof, modulus)
         g = RSA::Accumulator::RSA2048_UNKNOWN_ELEM
-        l = compute_challenge(base, result, proof.z)
-        alpha = blake2_hash(base, result, proof.z, l)
-        lhs = (proof.q.pow(l, modulus) * ((base * g.pow(alpha, modulus) % modulus)).pow(proof.r, modulus)) % modulus
-        rhs = (result * proof.z.pow(alpha, modulus) % modulus)
+        base = normalize(base, modulus)
+        result = normalize(result, modulus)
+        z = normalize(proof.z, modulus)
+        q = normalize(proof.q, modulus)
+        l = compute_challenge(base, result, z)
+        alpha = blake2_hash(base, result, z, l)
+        u = (base * g.pow(alpha, modulus)) % modulus
+        lhs = normalize(q.pow(l, modulus) * u.pow(proof.r, modulus), modulus)
+        rhs = normalize(result * z.pow(alpha, modulus), modulus)
         lhs == rhs
       end
 

@@ -6,6 +6,20 @@ module RSA
 
       using RSA::ACC::Ext
 
+      # Computes the canonical representative of +elem+ in the quotient group Z_n^* / {+-1}.
+      # Z_n^* always contains the known order-2 element -1, and the Adaptive Root Assumption
+      # which NI-PoE and NI-PoKE2 rely on does not hold in a group with a known low order
+      # element. Identifying y with -y removes it, so every group element MUST be normalized
+      # before it is hashed into a challenge, compared, or published as part of a proof.
+      # @param [Integer] elem an element of Z_n^*.
+      # @param [Integer] modulus modulus of the group.
+      # @return [Integer] the smaller of +elem+ and -+elem+ modulo +modulus+.
+      def normalize(elem, modulus)
+        y = elem % modulus
+        neg = modulus - y
+        y < neg ? y : neg
+      end
+
       # Convert element to prime number.
       # @param [String] element an element to be converted.
       # @return [Integer] prime number.
@@ -38,10 +52,14 @@ module RSA
       # @param [Integer] y
       # @return [Integer] w1^b * w2^a
       def shamir_trick(w1, w2, x, y, modulus)
-        raise ArgumentError, 'w1^x != w2^y' unless w1.pow(x, modulus) == w2.pow(y, modulus)
+        w1 = normalize(w1, modulus)
+        w2 = normalize(w2, modulus)
+        unless normalize(w1.pow(x, modulus), modulus) == normalize(w2.pow(y, modulus), modulus)
+          raise ArgumentError, 'w1^x != w2^y'
+        end
         a, b = egcd(x, y)
         raise ArgumentError, 'Inputs does not co-prime.' unless a * x + b * y == 1
-        (w1.pow(b, modulus) * w2.pow(a, modulus)) % modulus
+        normalize(w1.pow(b, modulus) * w2.pow(a, modulus), modulus)
       end
 
       # Computes Bezout coefficients.
