@@ -31,6 +31,10 @@ module RSA
       # @param [Integer] proof an proof.
       # @param [Integer] modulus modulus using computation.
       def verify(base, exp, result, proof, modulus)
+        # A proof comes from an untrusted prover, so a malformed one is a false result and
+        # not an exception.
+        return false unless [base, exp, result, proof, modulus].all? { |v| v.is_a?(Integer) }
+        return false unless exp.positive? && modulus > 1
         base = normalize(base, modulus)
         result = normalize(result, modulus)
         proof = normalize(proof, modulus)

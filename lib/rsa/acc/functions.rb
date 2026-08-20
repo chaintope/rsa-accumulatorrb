@@ -40,8 +40,18 @@ module RSA
       # Converts a list of elements to an product of prime numbers.
       # @param [Array[String]] elements a list of element.
       # @return [Integer] an product of prime numbers
+      # @raise [ArgumentError] If +elements+ is not a non-empty list of String.
       def elements_to_prime(elements)
+        raise ArgumentError, 'elements must be a non-empty Array of String.' unless valid_elements?(elements)
         elements.map{|e|hash_to_prime(e)}.inject(:*)
+      end
+
+      # Check whether +elements+ can be converted to a product of primes. Verifiers use this
+      # to turn a malformed proof into a false result instead of an exception.
+      # @param [Object] elements
+      # @return [Boolean]
+      def valid_elements?(elements)
+        elements.is_a?(Array) && !elements.empty? && elements.all? { |e| e.is_a?(String) }
       end
 
       # Computes (xy) th root of g given xth and yth roots of g. x and y is co-prime.

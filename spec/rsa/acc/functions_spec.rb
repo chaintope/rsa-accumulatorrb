@@ -56,6 +56,16 @@ RSpec.describe RSA::ACC::Functions do
     end
   end
 
+  describe '#elements_to_prime' do
+    it 'should reject anything that is not a non-empty list of String.' do
+      [[], nil, 'a', [nil], ['a', 1], [['a']]].each do |bad|
+        expect { functions.elements_to_prime(bad) }.to raise_error(ArgumentError)
+      end
+      expect(functions.elements_to_prime(%w(a b)))
+          .to eq(functions.hash_to_prime('a') * functions.hash_to_prime('b'))
+    end
+  end
+
   describe '#shamir_trick' do
     context 'Inputs is co-prime' do
       it 'should return xyth root.' do

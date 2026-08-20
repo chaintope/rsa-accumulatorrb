@@ -144,6 +144,63 @@ RSpec.describe RSA::Accumulator do
     end
   end
 
+  describe 'malformed proof handling' do
+    let(:acc) do
+      a = RSA::Accumulator.generate_rsa2048
+      a.add('a', 'b')
+      a
+    end
+
+    it 'should make #member? return false instead of raising.' do
+      proof = acc.add('c')
+      [
+        RSA::ACC::MembershipProof.new([], proof.witness, proof.acc_value, proof.proof),
+        RSA::ACC::MembershipProof.new(nil, proof.witness, proof.acc_value, proof.proof),
+        RSA::ACC::MembershipProof.new(['c', nil], proof.witness, proof.acc_value, proof.proof),
+        RSA::ACC::MembershipProof.new('c', nil, proof.acc_value, proof.proof),
+        RSA::ACC::MembershipProof.new('c', proof.witness, proof.acc_value, nil),
+        RSA::ACC::MembershipProof.new('c', proof.witness, proof.acc_value, 'not an integer'),
+        nil,
+        'not a proof'
+      ].each { |bad| expect(acc.member?(bad)).to be false }
+      expect(acc.member?(proof)).to be true
+    end
+
+    it 'should make #non_member? return false instead of raising.' do
+      acc.add('c')
+      ok = acc.prove_non_membership(%w(a b c), %w(zz))
+      [nil, [], [nil], ['a', 1], 'zz'].each do |bad|
+        expect(acc.non_member?(bad, ok)).to be false
+      end
+      [
+        nil,
+        'not a proof',
+        RSA::ACC::NonMembershipProof.new(ok.d, ok.v, ok.gv_inv, nil, ok.poe_proof),
+        RSA::ACC::NonMembershipProof.new(ok.d, ok.v, ok.gv_inv, RSA::ACC::PoKE2Proof.new(nil, nil, nil), ok.poe_proof),
+        RSA::ACC::NonMembershipProof.new(ok.d, ok.v, ok.gv_inv, RSA::ACC::PoKE2Proof.new(2, 2, -1), ok.poe_proof),
+        RSA::ACC::NonMembershipProof.new(ok.d, ok.v, ok.gv_inv, ok.poke2_proof, nil)
+      ].each { |bad| expect(acc.non_member?(%w(zz), bad)).to be false }
+      expect(acc.non_member?(%w(zz), ok)).to be true
+    end
+
+    it 'should make #delete raise RSA::ACC::Error.' do
+      proof = acc.add('c')
+      [
+        RSA::ACC::MembershipProof.new([], proof.witness, proof.acc_value, proof.proof),
+        RSA::ACC::MembershipProof.new(nil, proof.witness, proof.acc_value, proof.proof),
+        RSA::ACC::MembershipProof.new('c', nil, proof.acc_value, proof.proof),
+        nil
+      ].each do |bad|
+        expect { acc.delete(bad) }.to raise_error(RSA::ACC::Error)
+      end
+    end
+
+    it 'should reject an empty argument list.' do
+      expect { acc.add }.to raise_error(ArgumentError)
+      expect { acc.root_factor }.to raise_error(ArgumentError)
+    end
+  end
+
   describe 'quotient group Z_n^* / {+-1}' do
     it 'should keep every published group element normalized.' do
       acc = RSA::Accumulator.generate_rsa2048

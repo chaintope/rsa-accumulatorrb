@@ -60,6 +60,11 @@ module RSA
       # @param [Integer] modulus
       # @return [Boolean] Returns true for successful verification, false otherwise.
       def verify(base, result, proof, modulus)
+        # A proof comes from an untrusted prover, so a malformed one is a false result and
+        # not an exception.
+        return false unless proof.is_a?(RSA::ACC::PoKE2Proof)
+        return false unless [base, result, modulus, proof.z, proof.q, proof.r].all? { |v| v.is_a?(Integer) }
+        return false unless modulus > 1 && !proof.r.negative?
         g = RSA::Accumulator::RSA2048_UNKNOWN_ELEM
         base = normalize(base, modulus)
         result = normalize(result, modulus)

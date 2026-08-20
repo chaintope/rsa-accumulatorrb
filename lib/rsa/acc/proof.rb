@@ -20,10 +20,11 @@ module RSA
       end
 
       # Convert element to prime number.
-      # @return [Integer] prime number of element.
+      # @return [Integer] prime number of element, or nil if the element can not be converted.
       def element_prime
-        return nil if element.nil?
-        element.is_a?(Array) ? elements_to_prime(element) : hash_to_prime(element)
+        elements = element.is_a?(Array) ? element : [element]
+        return nil unless valid_elements?(elements)
+        elements_to_prime(elements)
       end
 
     end

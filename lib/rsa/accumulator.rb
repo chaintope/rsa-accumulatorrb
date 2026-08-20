@@ -107,7 +107,10 @@ module RSA
     # @param [RSA::ACC::MembershipProof] proof inclusion proof.
     # @return [Boolean] If element exist in acc return true, otherwise false.
     def member?(proof)
-      RSA::ACC::PoE.verify(proof.witness, proof.element_prime, value, proof.proof, n)
+      return false unless proof.is_a?(RSA::ACC::MembershipProof)
+      x = proof.element_prime
+      return false if x.nil?
+      RSA::ACC::PoE.verify(proof.witness, x, value, proof.proof, n)
     end
 
     # Verifies a non-membership proof against the current accumulator and +elements+ whose non-inclusion is being proven.
@@ -115,6 +118,8 @@ module RSA
     # @param [RSA::ACC::NonMembershipProof] proof non-membership proof.
     # @return [Boolean]
     def non_member?(elements, proof)
+      return false unless proof.is_a?(RSA::ACC::NonMembershipProof)
+      return false unless valid_elements?(elements)
       x = elements_to_prime(elements)
       return false unless valid_group_elem?(proof.v)
       return false unless valid_group_elem?(proof.d)
@@ -168,9 +173,12 @@ module RSA
       return RSA::ACC::MembershipProof.new(proofs.map(&:element).flatten, value, value, RSA::ACC::PoE.prove(value, 1, value, n)) if proofs.empty?
 
       witnesses = proofs.map do |proof|
+        raise RSA::ACC::Error, 'Invalid proof.' unless proof.is_a?(RSA::ACC::MembershipProof)
         p = proof.element_prime
+        raise RSA::ACC::Error, 'Invalid element.' if p.nil?
+        raise RSA::ACC::Error, 'Bad witness.' unless proof.witness.is_a?(Integer)
         raise RSA::ACC::Error, 'Bad witness.' unless normalize(proof.witness.pow(p, n), n) == value
-        [p, proof.witness]
+        [p, normalize(proof.witness, n)]
       end
 
       current_value = value
@@ -191,6 +199,7 @@ module RSA
     # @param [Array[Integer]] f factorizations of the exponent x = x1, ..., xn.
     # @return [Array{Integer}] array of xi-th root
     def root_factor(*f)
+      raise ArgumentError, 'factorization must not be empty.' if f.empty?
       return [value] if f.size == 1
       half_n = f.size / 2
       g_l = RSA::Accumulator.new(n, value.pow(f[0...half_n].map.inject(:*), n), g, false)
