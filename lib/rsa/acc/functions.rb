@@ -31,6 +31,9 @@ module RSA
       # @param [String] element an element to be converted.
       # @return [Integer] prime number.
       def hash_to_prime(element)
+        # Not String#to_s: that would map nil and other objects onto the prime of their
+        # string form, so nil and "" would become the same element.
+        raise TypeError, "element must be a String, got #{element.class}." unless element.is_a?(String)
         prime_from(ELEMENT_DST, [element])
       end
 
@@ -102,7 +105,7 @@ module RSA
       # @param [String] data
       # @return [String] +data+ prefixed with its byte length as a 64 bit big endian integer.
       def length_prefixed(data)
-        bytes = data.to_s.b
+        bytes = data.b
         [bytes.bytesize].pack('Q>') << bytes
       end
 

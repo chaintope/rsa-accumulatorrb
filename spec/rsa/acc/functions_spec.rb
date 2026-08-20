@@ -43,6 +43,13 @@ RSpec.describe RSA::ACC::Functions do
           .not_to eq(functions.send(:encode_fields, dst, ['x01', functions.send(:even_hex, 0)]))
     end
 
+    it 'should not coerce a non String element.' do
+      # nil.to_s and "" are the same bytes, so coercing would merge them into one element.
+      [nil, :a, 1, ['a']].each do |bad|
+        expect { functions.hash_to_prime(bad) }.to raise_error(TypeError)
+      end
+    end
+
     it 'should always produce a prime of the same width.' do
       widths = %w(a b c d e f g h i j).map { |e| functions.hash_to_prime(e).bit_length }
       expect(widths.uniq).to eq([512])
