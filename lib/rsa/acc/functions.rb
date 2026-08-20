@@ -6,6 +6,13 @@ module RSA
 
       using RSA::ACC::Ext
 
+      # Domain separation tags. Elements, Fiat-Shamir challenges and plain hashes are hashed
+      # with a distinct tag each, so that a caller supplied element can never be made to
+      # produce the same digest as a challenge over group elements.
+      ELEMENT_DST = 'RSA-ACC/v1/element'.freeze
+      CHALLENGE_DST = 'RSA-ACC/v1/challenge'.freeze
+      HASH_DST = 'RSA-ACC/v1/hash'.freeze
+
       # Computes the canonical representative of +elem+ in the quotient group Z_n^* / {+-1}.
       # Z_n^* always contains the known order-2 element -1, and the Adaptive Root Assumption
       # which NI-PoE and NI-PoKE2 rely on does not hold in a group with a known low order
@@ -24,16 +31,7 @@ module RSA
       # @param [String] element an element to be converted.
       # @return [Integer] prime number.
       def hash_to_prime(element)
-        nonce = 0
-        loop do
-          candidate = RbNaCl::Hash.blake2b(element + even_hex(nonce)).unpack("C*")
-          candidate[-1] |= 1
-          candidate = candidate.pack('c*').unpack("H*").first.to_i(16)
-          if candidate.to_bn.prime?
-            return candidate
-          end
-          nonce += 1
-        end
+        prime_from(ELEMENT_DST, [element])
       end
 
       # Converts a list of elements to an product of prime numbers.
@@ -77,17 +75,53 @@ module RSA
       # @param [Array[Integer]] params
       # @return [Integer] prime number of challenge.
       def compute_challenge(*params)
-        hash_to_prime(params.map{|p|even_hex(p)}.join)
+        prime_from(CHALLENGE_DST, params.map { |p| even_hex(p) })
       end
 
       # Computes hash value from +params+.
       # @param [Array[Integer]] params
       # @return [Integer] hash value.
       def blake2_hash(*params)
-        RbNaCl::Hash.blake2b(params.map{|p|even_hex(p)}.join).unpack("H*").first.to_i(16)
+        digest = RbNaCl::Hash.blake2b(encode_fields(HASH_DST, params.map { |p| even_hex(p) }))
+        digest.unpack("H*").first.to_i(16)
       end
 
       private
+
+      # Serializes +dst+ and +fields+ by prefixing each of them with its byte length, so that
+      # the resulting byte string can only be produced by this exact sequence of inputs.
+      # A plain concatenation is ambiguous: even_hex is variable length, so for example
+      # (0x01, 0x2345) and (0x0123, 0x45) both join to "012345".
+      # @param [String] dst domain separation tag.
+      # @param [Array[String]] fields fields to be serialized.
+      # @return [String] a binary string.
+      def encode_fields(dst, fields)
+        fields.inject(length_prefixed(dst)) { |buf, field| buf << length_prefixed(field) }
+      end
+
+      # @param [String] data
+      # @return [String] +data+ prefixed with its byte length as a 64 bit big endian integer.
+      def length_prefixed(data)
+        bytes = data.to_s.b
+        [bytes.bytesize].pack('Q>') << bytes
+      end
+
+      # Hashes +fields+ under the domain +dst+ repeatedly, incrementing a nonce, until the
+      # digest is prime.
+      # @param [String] dst domain separation tag.
+      # @param [Array[String]] fields fields to be hashed.
+      # @return [Integer] prime number.
+      def prime_from(dst, fields)
+        nonce = 0
+        loop do
+          digest = RbNaCl::Hash.blake2b(encode_fields(dst, fields + [even_hex(nonce)])).unpack("C*")
+          digest[0] |= 0x80  # keep the output width fixed, a leading zero byte would shorten it
+          digest[-1] |= 1    # 2 is the only even prime, so only odd candidates are worth testing
+          candidate = digest.pack('C*').unpack("H*").first.to_i(16)
+          return candidate if candidate.to_bn.prime?
+          nonce += 1
+        end
+      end
 
       # Convert +num+ to even hex string.
       # @param [Integer] num

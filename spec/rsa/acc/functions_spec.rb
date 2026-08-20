@@ -16,6 +16,39 @@ RSpec.describe RSA::ACC::Functions do
     end
   end
 
+  describe 'unambiguous hashing' do
+    it 'should not let a different parameter split produce the same challenge.' do
+      # even_hex is variable length, so joining without a separator makes
+      # (0x01, 0x2345) and (0x0123, 0x45) collide on "012345".
+      expect(functions.compute_challenge(0x01, 0x2345, 0xdead))
+          .not_to eq(functions.compute_challenge(0x0123, 0x45, 0xdead))
+      expect(functions.blake2_hash(0x01, 0x2345, 0xdead))
+          .not_to eq(functions.blake2_hash(0x0123, 0x45, 0xdead))
+    end
+
+    it 'should separate the element domain from the challenge domain.' do
+      # An element is caller supplied. Without domain separation it can be set to the hex
+      # encoding a challenge is built from, and land on the very same prime.
+      params = [0x01, 0x2345, 0xdead]
+      concatenated = params.map { |v| functions.send(:even_hex, v) }.join
+      expect(functions.hash_to_prime(concatenated))
+          .not_to eq(functions.compute_challenge(*params))
+    end
+
+    it 'should separate the element from the nonce.' do
+      # The nonce used to be appended to the element with no separator, so element "x" at
+      # nonce 0x0100 and element "x01" at nonce 0 were hashed from the same byte string.
+      dst = RSA::ACC::Functions::ELEMENT_DST
+      expect(functions.send(:encode_fields, dst, ['x', functions.send(:even_hex, 256)]))
+          .not_to eq(functions.send(:encode_fields, dst, ['x01', functions.send(:even_hex, 0)]))
+    end
+
+    it 'should always produce a prime of the same width.' do
+      widths = %w(a b c d e f g h i j).map { |e| functions.hash_to_prime(e).bit_length }
+      expect(widths.uniq).to eq([512])
+    end
+  end
+
   describe '#shamir_trick' do
     context 'Inputs is co-prime' do
       it 'should return xyth root.' do

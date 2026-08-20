@@ -28,7 +28,7 @@ RSpec.describe RSA::Accumulator do
         acc.add('c')
         acc.add('d')
         p = hash_to_prime('a') * hash_to_prime('b') * hash_to_prime('c') * hash_to_prime('d')
-        expect(acc.value).to eq(initial.pow(p, acc.n))
+        expect(acc.value).to eq(normalize(initial.pow(p, acc.n), acc.n))
       end
     end
 
